@@ -1,0 +1,754 @@
+{
+  "metadata": {
+    "fecha_analisis": "2026-04-22",
+    "total_archivos": 32,
+    "workspace": "c:\\procesos\\ETL",
+    "database": "MEDIOS_DIGITALES",
+    "version": "1.0"
+  },
+  "archivos": [
+    {
+      "id": 1,
+      "nombre": "mango_historia.py",
+      "proposito": "Importador histórico de métricas VOD",
+      "funcionalidad": "Consulta API Mango por día y carga en histórico",
+      "dependencias": ["requests", "mysql.connector"],
+      "inputs": {
+        "api": "https://api-mango.digitalproserver.com/",
+        "parametros": "token, slug (c13), date_start, date_end, type (overview), format (vod)",
+        "rango_default": "Mar 2026"
+      },
+      "outputs": {
+        "tabla": "c13_metricas_video",
+        "campos": ["video_id", "epoch", "plays", "streams", "devices", "time_total", "average_time", "fecha_consulta"]
+      },
+      "plataformas": ["Mango", "C13"],
+      "frecuencia": "Manual/Puntual",
+      "estado": "✓"
+    },
+    {
+      "id": 2,
+      "nombre": "insert_rrss.py",
+      "proposito": "Insertor de métricas diarias RRSS",
+      "funcionalidad": "Inserta/actualiza alcance y clics de Facebook",
+      "dependencias": ["mysql.connector"],
+      "inputs": {
+        "parametros": "fecha, alcance, clics",
+        "tipo": "Función auxiliar"
+      },
+      "outputs": {
+        "tabla": "RRSS_diarias",
+        "campos": ["fecha", "alcance_face", "clics_face"]
+      },
+      "plataformas": ["Facebook"],
+      "frecuencia": "On-demand",
+      "estado": "✓"
+    },
+    {
+      "id": 3,
+      "nombre": "insert_comentarios_rrss.py",
+      "proposito": "Consolidador de comentarios RRSS",
+      "funcionalidad": "Procesa JSONs de Apify; detecta red social automáticamente",
+      "dependencias": ["json", "os", "mysql.connector"],
+      "inputs": {
+        "carpeta": "descargas_apify/",
+        "formato": "JSON de Apify",
+        "redes_detectadas": ["Facebook", "TikTok", "Instagram"]
+      },
+      "outputs": {
+        "tabla": "comentarios_rrss_consolidado",
+        "campos": ["red_social", "video_url", "usuario", "comentario", "likes_num", "fecha_extraccion"]
+      },
+      "plataformas": ["Facebook", "TikTok", "Instagram"],
+      "frecuencia": "Manual",
+      "estado": "✓"
+    },
+    {
+      "id": 4,
+      "nombre": "get_ml_token.py",
+      "proposito": "Gestor OAuth MercadoLibre",
+      "funcionalidad": "Intercambia AUTH_CODE por tokens; refresh automático",
+      "dependencias": ["requests", "logging", "datetime"],
+      "inputs": {
+        "auth_code": "Código de autorización MercadoLibre",
+        "credenciales": "client_id, client_secret, redirect_uri"
+      },
+      "outputs": {
+        "access_token": "String",
+        "refresh_token": "String",
+        "user_id": "Integer",
+        "token_expiry": "Timestamp"
+      },
+      "plataformas": ["MercadoLibre"],
+      "frecuencia": "Inicial + Auto refresh cada 6h",
+      "estado": "✓"
+    },
+    {
+      "id": 5,
+      "nombre": "flow_trae_factura.py",
+      "proposito": "Inspector de facturas Flow",
+      "funcionalidad": "Consulta API Flow para detalles de invoice",
+      "dependencias": ["requests", "hashlib", "hmac", "json"],
+      "inputs": {
+        "invoice_id": "Número de factura (ej: 6413650)",
+        "credenciales": "API_KEY, SECRET_KEY"
+      },
+      "outputs": {
+        "formato": "JSON",
+        "campos_clave": ["status", "customerId", "amount", "attemp_count", "dueDate"]
+      },
+      "plataformas": ["Flow"],
+      "frecuencia": "Manual/Debug",
+      "estado": "✓"
+    },
+    {
+      "id": 6,
+      "nombre": "flow_moroso.py",
+      "proposito": "Buscador de morosos",
+      "funcionalidad": "Busca clientes en período de gracia con próximo intento de cobro",
+      "dependencias": ["requests", "hashlib", "hmac", "json", "csv"],
+      "inputs": {
+        "plan_id": "s-13go-B001",
+        "filtros": "period_end = TARGET_DATE, attemp_count = 1",
+        "parametros": "start, limit (paginación)"
+      },
+      "outputs": {
+        "formato": "CSV",
+        "campos": ["customerId", "externalId", "email", "subscription_end"]
+      },
+      "plataformas": ["Flow", "C13"],
+      "frecuencia": "Diaria",
+      "estado": "✓"
+    },
+    {
+      "id": 7,
+      "nombre": "flow_impago.py",
+      "proposito": "Consultor de invoices vencidas",
+      "funcionalidad": "Obtiene detalles de factura específica",
+      "dependencias": ["requests", "hashlib", "hmac", "json"],
+      "inputs": {
+        "invoice_id": "Número de factura (ej: 6218748)"
+      },
+      "outputs": {
+        "formato": "JSON",
+        "campos": ["status", "monto", "intentos", "fecha_vencimiento"]
+      },
+      "plataformas": ["Flow"],
+      "frecuencia": "Manual",
+      "estado": "✓"
+    },
+    {
+      "id": 8,
+      "nombre": "flow.py",
+      "proposito": "Inspector de invoices (debug)",
+      "funcionalidad": "Consulta y muestra estructura JSON de invoice",
+      "dependencias": ["requests", "hashlib", "hmac", "json"],
+      "inputs": {
+        "invoice_id": "Configurado en script"
+      },
+      "outputs": {
+        "formato": "JSON formateado para inspección"
+      },
+      "plataformas": ["Flow"],
+      "frecuencia": "Manual",
+      "estado": "✓"
+    },
+    {
+      "id": 9,
+      "nombre": "fb_vod_import_new.py",
+      "proposito": "Cargador Streamlit Videos Facebook",
+      "funcionalidad": "UI para cargar CSV Facebook; clasifica automáticamente por programa",
+      "dependencias": ["streamlit", "pandas", "mysql.connector", "re"],
+      "inputs": {
+        "archivo": "CSV desde exportación Facebook Insights",
+        "deteccion": "Automática de columnas (ID, Título, Vistas, Alcance, Fecha)"
+      },
+      "outputs": {
+        "tabla": "fb_video",
+        "campos": ["video_id", "titulo", "etiqueta", "fecha", "vistas", "alcance"]
+      },
+      "plataformas": ["Facebook"],
+      "frecuencia": "Manual",
+      "estado": "✓"
+    },
+    {
+      "id": 10,
+      "nombre": "fb_vod_import.py",
+      "proposito": "Cargador Streamlit Videos (Legacy)",
+      "funcionalidad": "Similar a nuevo; interfaz para carga de videos",
+      "dependencias": ["streamlit", "pandas", "mysql.connector", "re"],
+      "inputs": {
+        "archivo": "CSV Facebook"
+      },
+      "outputs": {
+        "tabla": "fb_video"
+      },
+      "plataformas": ["Facebook"],
+      "frecuencia": "Manual",
+      "estado": "✓"
+    },
+    {
+      "id": 11,
+      "nombre": "fb_live_import.py",
+      "proposito": "Cargador Streamlit Facebook LIVE",
+      "funcionalidad": "Carga y clasifica automáticamente transmisiones en vivo",
+      "dependencias": ["streamlit", "pandas", "mysql.connector"],
+      "inputs": {
+        "archivo": "CSV con tipo de publicación = LIVE",
+        "etiquetas": ["Rubias", "Canaliza", "React MO", "Mejor Tarde", "King League"]
+      },
+      "outputs": {
+        "tabla": "fb_live_video",
+        "campos": ["video_id", "titulo", "etiqueta", "fecha", "vistas"]
+      },
+      "plataformas": ["Facebook LIVE"],
+      "frecuencia": "Manual",
+      "estado": "✓"
+    },
+    {
+      "id": 12,
+      "nombre": "youtube_playslist_auto.py",
+      "proposito": "Extractor automático Playlists",
+      "funcionalidad": "Lee Excel con URLs de playlists; descarga todos los videos",
+      "dependencias": ["mysql.connector", "googleapiclient", "pandas", "re"],
+      "inputs": {
+        "archivo": "playlists.xlsx (columnas: etiqueta, url)",
+        "api_key": "AIzaSyDc75yPe--BM4npEhN5Yak3xdUnbKh_0Jc"
+      },
+      "outputs": {
+        "tabla": "c13_yt_metricas",
+        "campos": ["etiqueta", "id_playlist", "video_id", "titulo", "vistas", "fecha_publicacion"]
+      },
+      "plataformas": ["YouTube", "C13"],
+      "frecuencia": "Diaria",
+      "estado": "✓"
+    },
+    {
+      "id": 13,
+      "nombre": "youtube_playslist.py",
+      "proposito": "Extractor manual Playlists",
+      "funcionalidad": "Entrada interactiva de URLs; extrae videos y actualiza métricas",
+      "dependencias": ["mysql.connector", "googleapiclient", "re"],
+      "inputs": {
+        "entrada_usuario": "URL playlist + nombre programa"
+      },
+      "outputs": {
+        "tabla": "c13_yt_metricas",
+        "estrategia": "Actualiza vistas sin sobrescribir títulos"
+      },
+      "plataformas": ["YouTube", "C13"],
+      "frecuencia": "Manual",
+      "estado": "✓"
+    },
+    {
+      "id": 14,
+      "nombre": "tiktok_scraper_comentarios.py",
+      "proposito": "Web Scraper Async Comentarios TikTok",
+      "funcionalidad": "Usa Playwright para extraer comentarios de videos TikTok",
+      "dependencias": ["asyncio", "playwright", "mysql.connector", "re"],
+      "inputs": {
+        "url_video": "URL video TikTok",
+        "manejo": "Pop-ups, lazy-loading, scroll dinámico"
+      },
+      "outputs": {
+        "tabla": "comentarios_rrss_consolidado",
+        "campos": ["red_social (TikTok)", "video_url", "usuario", "comentario", "likes"]
+      },
+      "plataformas": ["TikTok"],
+      "frecuencia": "Manual",
+      "estado": "✓"
+    },
+    {
+      "id": 15,
+      "nombre": "tiktok_info_playslist.py",
+      "proposito": "Extractor Playlist Info TikTok",
+      "funcionalidad": "Extrae videos de playlist TikTok con contador de vistas",
+      "dependencias": ["asyncio", "playwright", "mysql.connector", "re"],
+      "inputs": {
+        "url_playlist": "URL playlist TikTok",
+        "tecnica": "Scroll profundo para cargar videos"
+      },
+      "outputs": {
+        "tabla": "tiktok_playlist_stats",
+        "campos": ["playlist_name", "video_n", "titulo", "vistas_num"]
+      },
+      "plataformas": ["TikTok"],
+      "frecuencia": "Manual",
+      "estado": "✓"
+    },
+    {
+      "id": 16,
+      "nombre": "T13_rudo_import.py",
+      "proposito": "Importador histórico Rudo/T13",
+      "funcionalidad": "Consulta API Rudo por lotes; inserta en tabla T13",
+      "dependencias": ["requests", "mysql.connector", "time"],
+      "inputs": {
+        "api": "https://api.rudo.video/api/getvideos",
+        "api_key": "1fc63b2840d5d7985fa39a4eed0c8821ff539c7393ea5f5c157fa4804079122a",
+        "parametros": "start, limit (max 200), sortCol, colOrder"
+      },
+      "outputs": {
+        "tabla": "T13_videos_rudo",
+        "campos_total": 28,
+        "incluye_tags": true
+      },
+      "plataformas": ["Rudo", "T13"],
+      "frecuencia": "Puntual",
+      "estado": "✓"
+    },
+    {
+      "id": 17,
+      "nombre": "T13_metricas_import.py",
+      "proposito": "Importador diario Mango/T13",
+      "funcionalidad": "Carga métricas del día anterior desde Mango",
+      "dependencias": ["requests", "mysql.connector"],
+      "inputs": {
+        "api": "https://api-mango.digitalproserver.com/",
+        "slug": "T13",
+        "fecha": "ayer"
+      },
+      "outputs": {
+        "tabla": "T13_metricas_video"
+      },
+      "plataformas": ["Mango", "T13"],
+      "frecuencia": "Diaria",
+      "estado": "✓"
+    },
+    {
+      "id": 18,
+      "nombre": "T13_mango_import.py",
+      "proposito": "Importador histórico Mango/T13",
+      "funcionalidad": "Carga histórica de VOD en rango de fechas",
+      "dependencias": ["requests", "mysql.connector"],
+      "inputs": {
+        "rango_default": "Mar 2026",
+        "slug": "T13"
+      },
+      "outputs": {
+        "tabla": "T13_metricas_video"
+      },
+      "plataformas": ["Mango", "T13"],
+      "frecuencia": "Puntual",
+      "estado": "✓"
+    },
+    {
+      "id": 19,
+      "nombre": "T13_articulos_import.py",
+      "proposito": "Importador Artículos T13",
+      "funcionalidad": "Consulta API T13 (JSON); carga artículos con metadata",
+      "dependencias": ["requests", "mysql.connector", "logging"],
+      "inputs": {
+        "api": "https://www.T13.cl/export/T13/recientes.json",
+        "conversion": "Fecha DD/MM/YYYY → YYYY-MM-DD HH:MM:SS"
+      },
+      "outputs": {
+        "tabla": "T13_articulos",
+        "estrategia": "ON DUPLICATE KEY UPDATE"
+      },
+      "plataformas": ["T13"],
+      "frecuencia": "Diaria",
+      "estado": "✓"
+    },
+    {
+      "id": 20,
+      "nombre": "rudo_import.py",
+      "proposito": "Importador Videos Rudo",
+      "funcionalidad": "Consulta API Rudo; carga videos con todos los campos",
+      "dependencias": ["requests", "mysql.connector"],
+      "inputs": {
+        "api": "https://api.rudo.video/api/getvideos",
+        "api_key": "836a8d85a4f60d312efc09db30b0dd00206810018eb1f48b2cc729c4e4f5cd4b (T13)"
+      },
+      "outputs": {
+        "tabla": "T13_videos_rudo",
+        "limit": 2000
+      },
+      "plataformas": ["Rudo", "T13"],
+      "frecuencia": "Manual",
+      "estado": "✓"
+    },
+    {
+      "id": 21,
+      "nombre": "c13_rudo_historia.py",
+      "proposito": "Carga histórica masiva Rudo/C13",
+      "funcionalidad": "Importa hasta 5000 videos en bloques de 200",
+      "dependencias": ["requests", "mysql.connector", "time"],
+      "inputs": {
+        "start_inicial": 0,
+        "total_a_traer": 5000,
+        "bloque": 200
+      },
+      "outputs": {
+        "tabla": "T13_videos_rudo",
+        "procesamiento_tags": "max 3, separados por |"
+      },
+      "plataformas": ["Rudo", "C13"],
+      "frecuencia": "Puntual",
+      "estado": "✓"
+    },
+    {
+      "id": 22,
+      "nombre": "consulta_notas_t13.py",
+      "proposito": "Monitor noticias T13 + WhatsApp",
+      "funcionalidad": "Polling de API JSON; detecta nuevas; envía WhatsApp",
+      "dependencias": ["requests", "pywhatkit", "time"],
+      "inputs": {
+        "api": "https://www.t13.cl/export/t13/recientes.json",
+        "telefono": "+56951967939",
+        "intervalo_polling": 60
+      },
+      "outputs": {
+        "formato": "Mensaje WhatsApp",
+        "contenido": "título, fecha, link"
+      },
+      "plataformas": ["T13"],
+      "frecuencia": "Continua (daemon)",
+      "estado": "✓"
+    },
+    {
+      "id": 23,
+      "nombre": "carga_pdigitales.py",
+      "proposito": "Cargador Plataforma Digital YouTube",
+      "funcionalidad": "Procesa playlists YouTube; extrae videos y carga estadísticas",
+      "dependencias": ["os", "googleapiclient", "mysql.connector"],
+      "inputs": {
+        "playlists": 5,
+        "api_key": "AIzaSyDc75yPe--BM4npEhN5Yak3xdUnbKh_0Jc"
+      },
+      "outputs": {
+        "tabla": "C13_Pdigitales",
+        "campos": ["programa", "capitulo", "video_id", "v_youtube"]
+      },
+      "plataformas": ["YouTube", "C13"],
+      "frecuencia": "Manual",
+      "estado": "✓"
+    },
+    {
+      "id": 24,
+      "nombre": "metricas_import.py",
+      "proposito": "Importador diario Mango/C13",
+      "funcionalidad": "Carga diaria de métricas del día anterior",
+      "dependencias": ["requests", "mysql.connector"],
+      "inputs": {
+        "api": "https://api-mango.digitalproserver.com/",
+        "slug": "c13",
+        "fecha": "ayer"
+      },
+      "outputs": {
+        "tabla": "c13_metricas_video"
+      },
+      "plataformas": ["Mango", "C13"],
+      "frecuencia": "Diaria",
+      "estado": "✓"
+    },
+    {
+      "id": 25,
+      "nombre": "mercadolibre_api.py",
+      "proposito": "Cliente completo API MercadoLibre",
+      "funcionalidad": "OAuth 2.0; consulta vendedor; órdenes; análisis de ventas/gastos",
+      "dependencias": ["requests", "json", "pandas", "logging"],
+      "inputs": {
+        "credenciales": "client_id, client_secret, redirect_uri o access_token"
+      },
+      "outputs": {
+        "reportes": "Transacciones (cobros, gastos, utilidad)"
+      },
+      "plataformas": ["MercadoLibre"],
+      "frecuencia": "On-demand",
+      "estado": "✓"
+    },
+    {
+      "id": 26,
+      "nombre": "mango_live_historia_fast.py",
+      "proposito": "Cargador histórico FAST (canales secundarios)",
+      "funcionalidad": "Importa métricas LIVE de canales FAST en rango de fechas",
+      "dependencias": ["requests", "mysql.connector"],
+      "inputs": {
+        "rango": "Mar 2026 (default)",
+        "canales": 16
+      },
+      "outputs": {
+        "tabla": "Fast_live_video",
+        "campos": ["canal", "plays", "streams", "devices"]
+      },
+      "plataformas": ["Mango", "C13 FAST"],
+      "frecuencia": "Puntual",
+      "estado": "✓"
+    },
+    {
+      "id": 27,
+      "nombre": "mango_live_historia.py",
+      "proposito": "Cargador histórico LIVE agregado",
+      "funcionalidad": "Importa datos LIVE históricos de C13",
+      "dependencias": ["requests", "mysql.connector"],
+      "inputs": {
+        "rango_fechas": "Parametrizable",
+        "slug": "c13"
+      },
+      "outputs": {
+        "tabla": "c13_live_video",
+        "estrategia": "Insert con ON DUPLICATE KEY UPDATE"
+      },
+      "plataformas": ["Mango", "C13"],
+      "frecuencia": "Puntual",
+      "estado": "✓"
+    },
+    {
+      "id": 28,
+      "nombre": "mango_live_import.py",
+      "proposito": "Importador diario LIVE",
+      "funcionalidad": "Carga diaria de métricas LIVE para todos los canales",
+      "dependencias": ["requests", "mysql.connector"],
+      "inputs": {
+        "fecha": "ayer",
+        "canales_mapeados": "c13, T13, 13CULTURA, 13FESTIVAL, etc."
+      },
+      "outputs": {
+        "tablas": ["c13_live_video", "T13_live_video", "Fast_live_video"]
+      },
+      "plataformas": ["Mango", "C13", "T13"],
+      "frecuencia": "Diaria",
+      "estado": "✓"
+    },
+    {
+      "id": 29,
+      "nombre": "articulos_import.py",
+      "proposito": "Importador diario Artículos C13",
+      "funcionalidad": "Consulta API C13; inserta nuevos artículos con IGNORE",
+      "dependencias": ["requests", "mysql.connector"],
+      "inputs": {
+        "api": "https://www.13.cl/export/13/recientes.json"
+      },
+      "outputs": {
+        "tabla": "c13_articulos",
+        "estrategia": "INSERT IGNORE (solo nuevos)"
+      },
+      "plataformas": ["C13"],
+      "frecuencia": "Diaria",
+      "estado": "✓"
+    },
+    {
+      "id": 30,
+      "nombre": "13GO_Arbol.py",
+      "proposito": "Sincronizador 13GO (modo turbo paralelo)",
+      "funcionalidad": "Sincroniza LIVE (señales) y capítulos VOD desde API 13GO",
+      "dependencias": ["requests", "mysql.connector", "hashlib", "concurrent.futures"],
+      "inputs": {
+        "api": "https://www.13.cl/13go-premium/feed/",
+        "deteccion_cambios": "SHA256 hash"
+      },
+      "outputs": {
+        "tablas": ["13go_senales_live", "13go_capitulos_vod"],
+        "reporte": "Cambios detectados"
+      },
+      "plataformas": ["13GO", "C13"],
+      "frecuencia": "Manual",
+      "estado": "✓"
+    },
+    {
+      "id": 31,
+      "nombre": "13GO_arbol_import.py",
+      "proposito": "Sincronizador 13GO con reportes",
+      "funcionalidad": "Similar a Arbol.py pero genera reportes CSV",
+      "dependencias": ["requests", "mysql.connector", "hashlib", "pandas", "concurrent.futures"],
+      "inputs": {
+        "api": "API 13GO",
+        "output_dirs": "ejecucion_log.txt, ./reportes/"
+      },
+      "outputs": {
+        "tablas": ["13go_senales_live", "13go_capitulos_vod"],
+        "archivos": "CSV con timestamp"
+      },
+      "plataformas": ["13GO", "C13"],
+      "frecuencia": "Automática",
+      "estado": "✓"
+    },
+    {
+      "id": 32,
+      "nombre": "analisis_sentimiento.py",
+      "proposito": "Analizador Sentimiento RRSS",
+      "funcionalidad": "Clasifica comentarios con RobERTa + BERT + heurística chilena",
+      "dependencias": ["mysql.connector", "pysentimiento", "transformers"],
+      "inputs": {
+        "tabla_origen": "comentarios_rrss_consolidado",
+        "modelos": ["RobERTa (español)", "BERT (robertuito)"],
+        "diccionarios": ["emojis", "sarcasmo", "modismos chilenos"]
+      },
+      "outputs": {
+        "tabla": "comentarios_rrss_consolidado",
+        "campos_nuevos": ["sent_robertito", "sent_bert", "sent_consenso"],
+        "valores": ["POS", "NEG", "NEU"]
+      },
+      "plataformas": ["RRSS (Facebook, TikTok, Instagram)"],
+      "frecuencia": "Manual",
+      "estado": "✓"
+    }
+  ],
+  "plataformas": {
+    "Mango": {
+      "total_scripts": 6,
+      "descripcion": "Plataforma de streaming/VOD metrics",
+      "archivos": ["mango_historia.py", "T13_metricas_import.py", "T13_mango_import.py", "metricas_import.py", "mango_live_historia_fast.py", "mango_live_historia.py", "mango_live_import.py"]
+    },
+    "YouTube": {
+      "total_scripts": 4,
+      "descripcion": "Plataforma de video",
+      "archivos": ["youtube_playslist_auto.py", "youtube_playslist.py", "carga_pdigitales.py"]
+    },
+    "Facebook": {
+      "total_scripts": 3,
+      "descripcion": "Red social",
+      "archivos": ["insert_rrss.py", "fb_vod_import_new.py", "fb_vod_import.py", "fb_live_import.py"]
+    },
+    "TikTok": {
+      "total_scripts": 2,
+      "descripcion": "Red social de video corto",
+      "archivos": ["tiktok_scraper_comentarios.py", "tiktok_info_playslist.py"]
+    },
+    "Rudo": {
+      "total_scripts": 4,
+      "descripcion": "Plataforma de contenido video premium",
+      "archivos": ["T13_rudo_import.py", "rudo_import.py", "c13_rudo_historia.py"]
+    },
+    "Flow": {
+      "total_scripts": 4,
+      "descripcion": "Plataforma de pagos (Chile)",
+      "archivos": ["flow_trae_factura.py", "flow_moroso.py", "flow_impago.py", "flow.py"]
+    },
+    "MercadoLibre": {
+      "total_scripts": 2,
+      "descripcion": "Marketplace",
+      "archivos": ["get_ml_token.py", "mercadolibre_api.py"]
+    },
+    "13GO": {
+      "total_scripts": 2,
+      "descripcion": "Plataforma 13GO (canales digitales)",
+      "archivos": ["13GO_Arbol.py", "13GO_arbol_import.py"]
+    },
+    "C13": {
+      "total_scripts": 8,
+      "descripcion": "Cadena de televisión",
+      "archivos": ["mango_historia.py", "insert_comentarios_rrss.py", "metricas_import.py", "c13_rudo_historia.py", "carga_pdigitales.py", "articulos_import.py", "analisis_sentimiento.py"]
+    },
+    "T13": {
+      "total_scripts": 4,
+      "descripcion": "Sitio de noticias",
+      "archivos": ["T13_rudo_import.py", "T13_metricas_import.py", "T13_mango_import.py", "T13_articulos_import.py", "consulta_notas_t13.py"]
+    },
+    "RRSS": {
+      "total_scripts": 2,
+      "descripcion": "Redes sociales en general",
+      "archivos": ["insert_rrss.py", "insert_comentarios_rrss.py", "analisis_sentimiento.py"]
+    }
+  },
+  "tablas_principales": [
+    {
+      "tabla": "c13_metricas_video",
+      "contenido": "Métricas VOD C13",
+      "fuentes": ["mango_historia.py", "metricas_import.py"],
+      "frecuencia": "Diaria + Histórico"
+    },
+    {
+      "tabla": "T13_metricas_video",
+      "contenido": "Métricas VOD T13",
+      "fuentes": ["T13_metricas_import.py", "T13_mango_import.py"],
+      "frecuencia": "Diaria + Histórico"
+    },
+    {
+      "tabla": "c13_live_video",
+      "contenido": "Métricas LIVE C13",
+      "fuentes": ["mango_live_historia.py", "mango_live_import.py"],
+      "frecuencia": "Diaria + Histórico"
+    },
+    {
+      "tabla": "T13_live_video",
+      "contenido": "Métricas LIVE T13",
+      "fuentes": ["mango_live_import.py"],
+      "frecuencia": "Diaria"
+    },
+    {
+      "tabla": "Fast_live_video",
+      "contenido": "Métricas canales FAST",
+      "fuentes": ["mango_live_historia_fast.py", "mango_live_import.py"],
+      "frecuencia": "Diaria + Histórico"
+    },
+    {
+      "tabla": "c13_videos_rudo",
+      "contenido": "Videos Rudo C13",
+      "fuentes": ["c13_rudo_historia.py"],
+      "frecuencia": "Puntual"
+    },
+    {
+      "tabla": "T13_videos_rudo",
+      "contenido": "Videos Rudo T13",
+      "fuentes": ["T13_rudo_import.py", "rudo_import.py"],
+      "frecuencia": "Manual + Histórico"
+    },
+    {
+      "tabla": "c13_yt_metricas",
+      "contenido": "Videos YouTube C13",
+      "fuentes": ["youtube_playslist_auto.py", "youtube_playslist.py"],
+      "frecuencia": "Diaria"
+    },
+    {
+      "tabla": "C13_Pdigitales",
+      "contenido": "Plataforma Digital C13",
+      "fuentes": ["carga_pdigitales.py"],
+      "frecuencia": "Manual"
+    },
+    {
+      "tabla": "c13_articulos",
+      "contenido": "Artículos C13",
+      "fuentes": ["articulos_import.py"],
+      "frecuencia": "Diaria"
+    },
+    {
+      "tabla": "T13_articulos",
+      "contenido": "Artículos T13",
+      "fuentes": ["T13_articulos_import.py"],
+      "frecuencia": "Diaria"
+    },
+    {
+      "tabla": "comentarios_rrss_consolidado",
+      "contenido": "Comentarios RRSS (FB/TK/IG)",
+      "fuentes": ["insert_comentarios_rrss.py", "tiktok_scraper_comentarios.py", "analisis_sentimiento.py"],
+      "frecuencia": "Manual"
+    },
+    {
+      "tabla": "13go_capitulos_vod",
+      "contenido": "Capítulos 13GO",
+      "fuentes": ["13GO_Arbol.py", "13GO_arbol_import.py"],
+      "frecuencia": "Diaria"
+    },
+    {
+      "tabla": "13go_senales_live",
+      "contenido": "Señales LIVE 13GO",
+      "fuentes": ["13GO_Arbol.py", "13GO_arbol_import.py"],
+      "frecuencia": "Diaria"
+    },
+    {
+      "tabla": "tiktok_playlist_stats",
+      "contenido": "Stats Playlists TikTok",
+      "fuentes": ["tiktok_info_playslist.py"],
+      "frecuencia": "Manual"
+    },
+    {
+      "tabla": "fb_video",
+      "contenido": "Videos Facebook",
+      "fuentes": ["fb_vod_import_new.py", "fb_vod_import.py"],
+      "frecuencia": "Manual"
+    },
+    {
+      "tabla": "fb_live_video",
+      "contenido": "Videos LIVE Facebook",
+      "fuentes": ["fb_live_import.py"],
+      "frecuencia": "Manual"
+    },
+    {
+      "tabla": "RRSS_diarias",
+      "contenido": "Métricas RRSS diarias",
+      "fuentes": ["insert_rrss.py"],
+      "frecuencia": "On-demand"
+    }
+  ]
+}

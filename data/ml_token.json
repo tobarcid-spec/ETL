@@ -1,0 +1,11 @@
+{
+  "client_id": "2393297832226304",
+  "client_secret": "FVe0gg9SxYU1lPz77685mJcHMKRdZLK6",
+  "redirect_uri": "https://bigtechchile.cl",
+  "access_token": "APP_USR-2393297832226304-022513-a55efaf4d2437301923c280e02f5f5d8-63897651",
+  "refresh_token": "TG-699f2f739c5d8f000136715d-63897651",
+  "user_id": 63897651,
+  "token_expiry": "2026-02-25T20:20:51.858807",
+  "expires_in": 21600,
+  "obtained_at": "2026-02-25T14:21:03.955266"
+}

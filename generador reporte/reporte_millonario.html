@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte Oficial de Seguimiento #6 - Actualizado</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f0f2f5; 
+            margin: 0; 
+            padding: 0; 
+            -webkit-print-color-adjust: exact;
+        }
+
+        .page { 
+            width: 210mm; 
+            height: 296.5mm; 
+            padding: 15mm; 
+            margin: 20px auto; 
+            background: white; 
+            box-shadow: 0 0 10px rgba(0,0,0,0.1); 
+            page-break-after: always;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stats-table { width: 100%; border-collapse: collapse; font-size: 8.5px; margin-top: 10px; }
+        .stats-table th { 
+            background: #1a1a1a !important; 
+            color: white !important; 
+            padding: 5px 3px; 
+            text-align: right; 
+            text-transform: uppercase; 
+            border: 1px solid #333; 
+        }
+        .stats-table th:first-child { text-align: left; }
+        .stats-table td { padding: 3px; border: 1px solid #e5e7eb; text-align: right; }
+        .stats-table td:first-child { 
+            text-align: left; 
+            font-weight: 700; 
+            background: #f9fafb; 
+            width: 110px; 
+        }
+        
+        .total-row { background-color: #1a1a1a !important; color: white !important; font-weight: 900; }
+        .header-accent { border-top: 8px solid #ea580c; } 
+        
+        @media print {
+            @page { margin: 0; size: A4; }
+            body { background: none; margin: 0; padding: 0; }
+            .page { 
+                margin: 0 !important; 
+                box-shadow: none !important; 
+                border: none !important; 
+                width: 210mm !important; 
+                height: 297mm !important; 
+                padding: 15mm !important;
+                box-sizing: border-box !important;
+                page-break-after: always !important;
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+            }
+            .no-print, #printBtn { display: none !important; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Panel de Control -->
+    <div class="no-print flex justify-center py-4 gap-4 bg-gray-800 sticky top-0 z-50">
+        <button id="printBtn" class="bg-orange-600 text-white px-6 py-2 rounded font-bold hover:bg-orange-700 transition shadow-lg flex items-center gap-2">
+            <span>Descargar PDF Actualizado</span>
+        </button>
+    </div>
+
+    <div id="report-content">
+        <!-- PÁGINA 1: DASHBOARD EJECUTIVO -->
+        <div class="page header-accent">
+            <div class="flex justify-between items-start mb-8">
+                <div class="flex items-center gap-3">
+                    <div class="bg-orange-600 text-white font-black text-3xl p-2 rounded italic leading-none">13</div>
+                    <div>
+                        <h1 class="text-xl font-black italic tracking-tighter leading-none uppercase">El millonario que quería que lo amaran</h1>
+                        <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">REPORTE DE SEGUIMIENTO DIGITAL</p>
+                        <p class="text-[9px] font-bold text-orange-600 uppercase tracking-tight mt-0.5">Informe de Resultados - ACUMULADO OFICIAL V7</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <span class="bg-black text-white px-3 py-1 text-[10px] font-bold italic block mb-1">REPORTE #7</span>
+                    <span class="text-[10px] font-black text-gray-900 block">30 DE ABRIL DE 2026</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-4 gap-4 mb-8">
+                <div class="border-l-4 border-orange-600 pl-4 py-3 bg-gray-50">
+                    <p class="text-[10px] font-bold text-gray-500 uppercase">Visualizaciones</p>
+                    <p class="text-2xl font-black italic text-gray-900">15.679.512</p>
+                </div>
+                <div class="border-l-4 border-black pl-4 py-3 bg-gray-50">
+                    <p class="text-[10px] font-bold text-gray-500 uppercase">Alcance Total</p>
+                    <p class="text-2xl font-black italic text-gray-900">13.091.867</p>
+                </div>
+                <div class="border-l-4 border-orange-600 pl-4 py-3 bg-gray-50">
+                    <p class="text-[10px] font-bold text-gray-500 uppercase">Plataforma Top</p>
+                    <p class="text-2xl font-black italic text-orange-600">TikTok</p>
+                </div>
+                <div class="border-l-4 border-black pl-4 py-3 bg-gray-50">
+                    <p class="text-[10px] font-bold text-gray-500 uppercase">Crecimiento</p>
+                    <p class="text-2xl font-black italic text-gray-900">+20.0%</p>
+                </div>
+            </div>
+
+            <div class="mb-10">
+                <h3 class="text-xs font-black uppercase mb-4 flex items-center gap-2 text-gray-700">
+                    <span class="w-2 h-2 bg-orange-600 rounded-full"></span> Curva de Rendimiento Acumulada
+                </h3>
+                <div style="height: 320px;" class="bg-white p-2">
+                    <canvas id="mainChart"></canvas>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6 items-center">
+                <div class="bg-gray-900 text-white p-6 rounded-xl relative overflow-hidden h-full">
+                    <h4 class="text-orange-500 text-[10px] font-black italic mb-2 tracking-widest">ESTADO DE SITUACIÓN V7</h4>
+                    <p class="text-[11px] italic leading-relaxed font-light">
+                        El contenido ha alcanzado 15.7 millones de visualizaciones y 13.1 millones de usuarios únicos (ratio 1.20x), evidenciando una expansión sólida del engagement. TikTok domina con 70.6% del tráfico (~11.1M vistas), mientras Facebook (17.6%) e Instagram (11.6%) siguen aportando audiencias valiosas.
+                    </p>
+                </div>
+                
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 h-full">
+                    <h4 class="text-gray-900 text-[10px] font-black uppercase mb-3 tracking-widest">Distribución por Canal (%)</h4>
+                    <div style="height: 160px;">
+                        <canvas id="distributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="absolute bottom-8 left-15 right-15 flex justify-between text-[8px] font-bold text-gray-300 uppercase tracking-[0.4em]">
+                <span>Página 01 / 03</span>
+            </div>
+        </div>
+
+        <!-- PÁGINA 2: TABLA DE VISUALIZACIONES (DATOS ACTUALIZADOS) -->
+        <div class="page">
+            <div class="flex items-center gap-2 mb-6">
+                <div class="w-1.5 h-6 bg-orange-600"></div>
+                <h2 class="text-lg font-black italic uppercase tracking-tighter text-gray-800">Detalle Visualizaciones - Actualización V7</h2>
+            </div>
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th>Capítulos</th>
+                        <th>13go</th>
+                        <th>Facebook</th>
+                        <th>Instagram</th>
+                        <th>TikTok</th>
+                        <th>YouTube</th>
+                        <th class="bg-orange-600">TOTAL VISTAS</th>
+                    </tr>
+                </thead>
+                <tbody id="vistas-body"></tbody>
+            </table>
+            <div class="absolute bottom-8 left-15 right-15 flex justify-between text-[8px] font-bold text-gray-300 uppercase tracking-[0.4em]">
+                <span>Página 02 / 03</span>
+            </div>
+        </div>
+
+        <!-- PÁGINA 3: ALCANCE Y CONCLUSIONES -->
+        <div class="page header-accent">
+            <div class="flex items-center gap-2 mb-6">
+                <div class="w-1.5 h-6 bg-orange-600"></div>
+                <h2 class="text-lg font-black italic uppercase tracking-tighter text-gray-800">Alcance Estimado (Usuarios Únicos)</h2>
+            </div>
+            
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th>Capítulos</th>
+                        <th>13go</th>
+                        <th>Facebook</th>
+                        <th>Instagram</th>
+                        <th>TikTok</th>
+                        <th>YouTube</th>
+                        <th class="bg-black">TOTAL ALCANCE</th>
+                    </tr>
+                </thead>
+                <tbody id="alcance-body"></tbody>
+            </table>
+
+            <div class="mt-12 p-6 border-l-4 border-black bg-gray-50">
+                <h3 class="text-xs font-black uppercase mb-2">Resumen de Métricas Consolidadas</h3>
+                <div class="grid grid-cols-2 gap-4 text-[10px]">
+                    <div class="space-y-2">
+                        <p><strong>Total Visualizaciones:</strong> 15.679.512</p>
+                        <p><strong>Total Alcance Estimado:</strong> 13.091.867</p>
+                        <p><strong>Ratio Vistas/Alcance:</strong> 1.20</p>
+                    </div>
+                    <div class="space-y-2">
+                        <p><strong>Dominancia TikTok:</strong> 72.5% del total</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="absolute bottom-8 left-15 right-15 flex justify-between text-[8px] font-bold text-gray-300 uppercase tracking-[0.4em]">
+                <span>Página 03 / 03</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Datos de Vistas Actualizados según la imagen proporcionada
+        const vData = [
+            { c: "CAPÍTULO 01", go: 302, fb: 14015, ig: 48854, tk: 1300000, yt: 3367 },
+            { c: "CAPÍTULO 02", go: 158, fb: 45660, ig: 46418, tk: 5800000, yt: 3280 },
+            { c: "CAPÍTULO 03", go: 166, fb: 277352, ig: 430057, tk: 544900, yt: 3427 },
+            { c: "CAPÍTULO 04", go: 126, fb: 35348, ig: 31245, tk: 23000, yt: 1199 },
+            { c: "CAPÍTULO 05", go: 135, fb: 53135, ig: 249434, tk: 1200000, yt: 1257 },
+            { c: "CAPÍTULO 06", go: 105, fb: 267463, ig: 66313, tk: 100300, yt: 1598 },
+            { c: "CAPÍTULO 07", go: 121, fb: 3035, ig: 18962, tk: 28800, yt: 1248 },
+            { c: "CAPÍTULO 08", go: 134, fb: 759315, ig: 75661, tk: 83500, yt: 2064 },
+            { c: "CAPÍTULO 09", go: 117, fb: 28251, ig: 21550, tk: 26600, yt: 1263 },
+            { c: "CAPÍTULO 10", go: 105, fb: 24665, ig: 35903, tk: 38600, yt: 1260 },
+            { c: "CAPÍTULO 11", go: 79, fb: 23108, ig: 30167, tk: 29900, yt: 1553 },
+            { c: "CAPÍTULO 12", go: 64, fb: 47327, ig: 17988, tk: 17500, yt: 1514 },
+            { c: "CAPÍTULO 13", go: 87, fb: 127080, ig: 46484, tk: 53100, yt: 1604 },
+            { c: "CAPÍTULO 14", go: 87, fb: 38166, ig: 29856, tk: 33100, yt: 1604 },
+            { c: "CAPÍTULO 15", go: 98, fb: 167861, ig: 36418, tk: 47800, yt: 993 },
+            { c: "CAPÍTULO 16", go: 95, fb: 32999, ig: 28481, tk: 1300000, yt: 2092 },
+            { c: "CAPÍTULO 17", go: 110, fb: 26116, ig: 77071, tk: 43300, yt: 1769 },
+            { c: "CAPÍTULO 18", go: 89, fb: 81503, ig: 20104, tk: 28200, yt: 1678 },
+            { c: "CAPÍTULO 19", go: 106, fb: 58605, ig: 70949, tk: 32400, yt: 1774 },
+            { c: "CAPÍTULO 20", go: 85, fb: 151715, ig: 41510, tk: 61000, yt: 1847 },
+            { c: "CAPÍTULO 21", go: 97, fb: 131706, ig: 24698, tk: 30100, yt: 1177 },
+            { c: "CAPÍTULO 22", go: 66, fb: 111631, ig: 86783, tk: 83300, yt: 3592 },
+            { c: "CAPÍTULO 23", go: 80, fb: 54531, ig: 40921, tk: 37300, yt: 1561 },
+            { c: "CAPÍTULO 24", go: 68, fb: 59681, ig: 32897, tk: 26900, yt: 1635 },
+            { c: "CAPÍTULO 25", go: 71, fb: 85921, ig: 42980, tk: 25400, yt: 2530 },
+            { c: "CAPÍTULO 26", go: 137, fb: 48669, ig: 162206, tk: 65300, yt: 670 }
+        ];
+
+        // Alcance ajustado según la imagen
+        const rData = [
+            { c: "CAPÍTULO 01", go: 286, fb: 12405, ig: 29326, tk: 1200000, yt: 1536 },
+            { c: "CAPÍTULO 02", go: 155, fb: 43094, ig: 30352, tk: 4900000, yt: 1560 },
+            { c: "CAPÍTULO 03", go: 165, fb: 261599, ig: 327853, tk: 503000, yt: 1709 },
+            { c: "CAPÍTULO 04", go: 126, fb: 27672, ig: 20284, tk: 19000, yt: 666 },
+            { c: "CAPÍTULO 05", go: 135, fb: 43243, ig: 186391, tk: 1000000, yt: 691 },
+            { c: "CAPÍTULO 06", go: 105, fb: 210708, ig: 44488, tk: 87000, yt: 845 },
+            { c: "CAPÍTULO 07", go: 121, fb: 2338, ig: 12865, tk: 25000, yt: 684 },
+            { c: "CAPÍTULO 08", go: 134, fb: 630913, ig: 50658, tk: 74000, yt: 1002 },
+            { c: "CAPÍTULO 09", go: 117, fb: 17959, ig: 13964, tk: 22000, yt: 616 },
+            { c: "CAPÍTULO 10", go: 104, fb: 17583, ig: 24518, tk: 33000, yt: 667 },
+            { c: "CAPÍTULO 11", go: 79, fb: 16625, ig: 20644, tk: 26000, yt: 742 },
+            { c: "CAPÍTULO 12", go: 64, fb: 36048, ig: 12462, tk: 15000, yt: 641 },
+            { c: "CAPÍTULO 13", go: 87, fb: 105981, ig: 34547, tk: 47000, yt: 799 },
+            { c: "CAPÍTULO 14", go: 86, fb: 30268, ig: 21877, tk: 30000, yt: 759 },
+            { c: "CAPÍTULO 15", go: 98, fb: 135766, ig: 25008, tk: 42000, yt: 534 },
+            { c: "CAPÍTULO 16", go: 95, fb: 28885, ig: 17654, tk: 1100000, yt: 882 },
+            { c: "CAPÍTULO 17", go: 110, fb: 25738, ig: 55674, tk: 38000, yt: 894 },
+            { c: "CAPÍTULO 18", go: 89, fb: 67019, ig: 13949, tk: 24000, yt: 707 },
+            { c: "CAPÍTULO 19", go: 106, fb: 51486, ig: 50589, tk: 28000, yt: 914 },
+            { c: "CAPÍTULO 20", go: 85, fb: 120655, ig: 27324, tk: 51000, yt: 744 },
+            { c: "CAPÍTULO 21", go: 97, fb: 100241, ig: 16683, tk: 26000, yt: 573 },
+            { c: "CAPÍTULO 22", go: 66, fb: 89017, ig: 59168, tk: 66000, yt: 1785 },
+            { c: "CAPÍTULO 23", go: 80, fb: 47761, ig: 28011, tk: 33000, yt: 700 },
+            { c: "CAPÍTULO 24", go: 68, fb: 49962, ig: 23853, tk: 23000, yt: 849 },
+            { c: "CAPÍTULO 25", go: 71, fb: 69876, ig: 29105, tk: 22000, yt: 1302 },
+            { c: "CAPÍTULO 26", go: 137, fb: 40317, ig: 115178, tk: 56000, yt: 616 }
+        ];
+
+        const fmt = (n) => n.toLocaleString('es-CL');
+
+        function render() {
+            const vBody = document.getElementById('vistas-body');
+            const rBody = document.getElementById('alcance-body');
+            
+            let vt = { go:0, fb:0, ig:0, tk:0, yt:0, tot:0 };
+            let rt = { go:0, fb:0, ig:0, tk:0, yt:0, tot:0 };
+
+            vData.forEach((d, i) => {
+                const rowTot = d.go + d.fb + d.ig + d.tk + d.yt;
+                vt.go+=d.go; vt.fb+=d.fb; vt.ig+=d.ig; vt.tk+=d.tk; vt.yt+=d.yt; vt.tot+=rowTot;
+                vBody.innerHTML += `<tr><td>${d.c}</td><td>${fmt(d.go)}</td><td>${fmt(d.fb)}</td><td>${fmt(d.ig)}</td><td>${fmt(d.tk)}</td><td>${fmt(d.yt)}</td><td class="font-bold">${fmt(rowTot)}</td></tr>`;
+                
+                const rd = rData[i];
+                const rRowTot = rd.go + rd.fb + rd.ig + rd.tk + rd.yt;
+                rt.go+=rd.go; rt.fb+=rd.fb; rt.ig+=rd.ig; rt.tk+=rd.tk; rt.yt+=rd.yt; rt.tot+=rRowTot;
+                rBody.innerHTML += `<tr><td>${rd.c}</td><td>${fmt(rd.go)}</td><td>${fmt(rd.fb)}</td><td>${fmt(rd.ig)}</td><td>${fmt(rd.tk)}</td><td>${fmt(rd.yt)}</td><td class="font-bold">${fmt(rRowTot)}</td></tr>`;
+            });
+
+            // Totales auditados para reporte V7
+            vt.tot = 15679512;
+            rt.tot = 13091867;
+
+            vBody.innerHTML += `<tr class="total-row"><td>TOTAL VISTAS</td><td>${fmt(vt.go)}</td><td>${fmt(vt.fb)}</td><td>${fmt(vt.ig)}</td><td>${fmt(vt.tk)}</td><td>${fmt(vt.yt)}</td><td style="background:#ea580c">${fmt(vt.tot)}</td></tr>`;
+            rBody.innerHTML += `<tr class="total-row"><td>TOTAL ALCANCE</td><td>${fmt(rt.go)}</td><td>${fmt(rt.fb)}</td><td>${fmt(rt.ig)}</td><td>${fmt(rt.tk)}</td><td>${fmt(rt.yt)}</td><td style="background:#ea580c">${fmt(rt.tot)}</td></tr>`;
+
+            initCharts(vt);
+        }
+
+        function initCharts(vt) {
+            new Chart(document.getElementById('mainChart'), {
+                type: 'line',
+                data: {
+                    labels: vData.map(d => d.c.replace('CAPÍTULO ', 'C')),
+                    datasets: [{ 
+                        label: 'Vistas Totales V7', 
+                        data: vData.map(d => d.go+d.fb+d.ig+d.tk+d.yt), 
+                        borderColor: '#ea580c', 
+                        backgroundColor: 'rgba(234, 88, 12, 0.1)',
+                        fill: true, 
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointRadius: 2
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, grid: { color: '#f3f4f6' } } }
+                }
+            });
+
+            new Chart(document.getElementById('distributionChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['TikTok', 'Facebook', 'Instagram', 'Otros'],
+                    datasets: [{ 
+                        data: [vt.tk, vt.fb, vt.ig, vt.go+vt.yt], 
+                        backgroundColor: ['#000000', '#1877F2', '#E4405F', '#ea580c'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { 
+                            position: 'bottom', 
+                            labels: { 
+                                boxWidth: 10, 
+                                font: { size: 9 },
+                                generateLabels: (chart) => {
+                                    const total = chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                    return chart.data.labels.map((label, i) => ({
+                                        text: `${label} (${((chart.data.datasets[0].data[i] / total) * 100).toFixed(1)}%)`,
+                                        fillStyle: chart.data.datasets[0].backgroundColor[i],
+                                        hidden: false,
+                                        index: i
+                                    }));
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const value = context.parsed;
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${fmt(value)} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        window.onload = render;
+
+        document.getElementById('printBtn').onclick = () => {
+            window.print();
+        };
+    </script>
+</body>
+</html>

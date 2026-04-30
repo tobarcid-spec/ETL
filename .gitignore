@@ -1,0 +1,27 @@
+# Archivos sensibles y tokens
+data/token.pickle
+data/ml_token.json
+
+# Logs
+*.log
+data/ejecucion_log.txt
+data/script_t13.log
+script_t13.log
+
+# Archivos temporales
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Datos sensibles
+data/descargas_apify/
+data/programacion/
+data/reportes/
+
+# Excel files (si contienen datos sensibles)
+*.xlsx
+
+# Environment files
+.env
+.env.local

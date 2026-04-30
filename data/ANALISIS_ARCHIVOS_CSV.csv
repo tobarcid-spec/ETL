@@ -1,0 +1,33 @@
+Archivo,Propósito,Funcionalidad,Dependencias,Entrada,Salida,Plataformas,Frecuencia,Tabla_Principal,Estado
+mango_historia.py,Importador histórico de métricas VOD,Consulta API Mango por día y carga en histórico,requests;mysql.connector,API Mango (rango fechas),c13_metricas_video,Mango;C13,Manual/Puntual,c13_metricas_video,✓
+insert_rrss.py,Insertor de métricas diarias RRSS,Inserta/actualiza alcance y clics de Facebook,mysql.connector,Fecha;Alcance;Clics,RRSS_diarias,Facebook,On-demand,RRSS_diarias,✓
+insert_comentarios_rrss.py,Consolidador de comentarios RRSS,Procesa JSONs de Apify;detecta red social,json;os;mysql.connector,Archivos JSON Apify,comentarios_rrss_consolidado,Facebook;TikTok;Instagram,Manual,comentarios_rrss_consolidado,✓
+get_ml_token.py,Gestor OAuth MercadoLibre,Intercambia AUTH_CODE por tokens;refresh automático,requests;logging,AUTH_CODE;Credenciales,access_token;refresh_token;user_id,MercadoLibre,Inicial + Auto,N/A,✓
+flow_trae_factura.py,Inspector de facturas Flow,Consulta API Flow para detalles de invoice,requests;hashlib;hmac,Invoice ID;Credenciales Flow,JSON con detalles invoice,Flow,Manual/Debug,N/A,✓
+flow_moroso.py,Buscador de morosos,Busca clientes en período de gracia con próx intento,requests;hashlib;hmac;csv,Plan ID;Credenciales,CSV de morosos;reporte,Flow;C13,Diaria,N/A,✓
+flow_impago.py,Consultor de invoices vencidas,Obtiene detalles de factura específica,requests;hashlib;hmac,Invoice ID,JSON con detalles,Flow,Manual,N/A,✓
+flow.py,Inspector de invoices (debug),Consulta y muestra estructura JSON de invoice,requests;hashlib;hmac,Invoice ID configurado,JSON formateado,Flow,Manual,N/A,✓
+fb_vod_import_new.py,Cargador Streamlit Videos Facebook,UI para cargar CSV Facebook;clasifica automáticamente,streamlit;pandas;mysql.connector,CSV desde Facebook Insights,fb_video,Facebook,Manual,fb_video,✓
+fb_vod_import.py,Cargador Streamlit Videos (Legacy),Similar a nuevo;interfaz para carga,streamlit;pandas;mysql.connector,CSV Facebook,fb_video,Facebook,Manual,fb_video,✓
+fb_live_import.py,Cargador Streamlit Facebook LIVE,Carga y clasifica automáticamente transmisiones en vivo,streamlit;pandas;mysql.connector,CSV tipo publicación LIVE,fb_live_video,Facebook LIVE,Manual,fb_live_video,✓
+youtube_playslist_auto.py,Extractor automático Playlists,Lee Excel;descarga videos;carga en BD,mysql.connector;googleapiclient;pandas,playlists.xlsx (etiqueta;url),c13_yt_metricas,YouTube;C13,Diaria,c13_yt_metricas,✓
+youtube_playslist.py,Extractor manual Playlists,Entrada interactiva URLs;extrae videos,mysql.connector;googleapiclient,URL playlist + nombre,c13_yt_metricas,YouTube;C13,Manual,c13_yt_metricas,✓
+tiktok_scraper_comentarios.py,Web Scraper Async Comentarios TikTok,Usa Playwright;extrae comentarios de videos,asyncio;playwright;mysql.connector,URL video TikTok,comentarios_rrss_consolidado,TikTok,Manual,comentarios_rrss_consolidado,✓
+tiktok_info_playslist.py,Extractor Playlist Info TikTok,Extrae videos de playlist con contador vistas,asyncio;playwright;mysql.connector,URL playlist TikTok,tiktok_playlist_stats,TikTok,Manual,tiktok_playlist_stats,✓
+T13_rudo_import.py,Importador histórico Rudo/T13,Consulta API Rudo por lotes;inserta en T13,requests;mysql.connector;time,API Rudo (start;limit),T13_videos_rudo,Rudo;T13,Puntual,T13_videos_rudo,✓
+T13_metricas_import.py,Importador diario Mango/T13,Carga métricas del día anterior,requests;mysql.connector,API Mango;slug T13;fecha,T13_metricas_video,Mango;T13,Diaria,T13_metricas_video,✓
+T13_mango_import.py,Importador histórico Mango/T13,Carga histórica VOD en rango de fechas,requests;mysql.connector,API Mango;rango fechas,T13_metricas_video,Mango;T13,Puntual,T13_metricas_video,✓
+T13_articulos_import.py,Importador Artículos T13,Consulta API T13;carga artículos con metadata,requests;mysql.connector;logging,API T13 JSON,T13_articulos,T13,Diaria,T13_articulos,✓
+rudo_import.py,Importador Videos Rudo,Consulta API Rudo;carga videos con 28 campos,requests;mysql.connector,API Rudo;API KEY,T13_videos_rudo,Rudo;T13,Manual,T13_videos_rudo,✓
+c13_rudo_historia.py,Carga histórica masiva Rudo/C13,Importa hasta 5000 videos en bloques de 200,requests;mysql.connector;time,API Rudo;parámetros START/LIMIT,T13_videos_rudo,Rudo;C13,Puntual,T13_videos_rudo,✓
+consulta_notas_t13.py,Monitor noticias T13 + WhatsApp,Polling de API JSON;detecta nuevas;envía WhatsApp,requests;pywhatkit;time,API T13 JSON;teléfono WhatsApp,Mensaje WhatsApp,T13,Continua (daemon),N/A,✓
+carga_pdigitales.py,Cargador Plataforma Digital YouTube,Procesa playlists YouTube;extrae stats,os;googleapiclient;mysql.connector,5 Playlist IDs YouTube;API KEY,C13_Pdigitales,YouTube;C13,Manual,C13_Pdigitales,✓
+metricas_import.py,Importador diario Mango/C13,Carga diaria de métricas del día anterior,requests;mysql.connector,API Mango;slug c13,c13_metricas_video,Mango;C13,Diaria,c13_metricas_video,✓
+mercadolibre_api.py,Cliente completo API MercadoLibre,OAuth 2.0;consulta vendedor;órdenes;análisis vtas,requests;json;pandas;logging,Credenciales OAuth o access_token,Reportes transacciones,MercadoLibre,On-demand,N/A,✓
+mango_live_historia_fast.py,Cargador histórico FAST (canales secundarios),Importa métricas LIVE de canales FAST,requests;mysql.connector,Fecha inicio/fin;16 canales,Fast_live_video,Mango;C13 FAST,Puntual,Fast_live_video,✓
+mango_live_historia.py,Cargador histórico LIVE agregado,Importa datos LIVE históricos C13,requests;mysql.connector,Rango fechas;slug c13,c13_live_video,Mango;C13,Puntual,c13_live_video,✓
+mango_live_import.py,Importador diario LIVE,Carga diaria métricas LIVE todos canales,requests;mysql.connector,Fecha ayer;mapeo canales,c13_live_video;T13_live_video;Fast_live_video,Mango;C13;T13,Diaria,c13_live_video,✓
+articulos_import.py,Importador diario Artículos C13,Consulta API C13;inserta nuevos artículos,requests;mysql.connector,API C13 JSON,c13_articulos,C13,Diaria,c13_articulos,✓
+13GO_Arbol.py,Sincronizador 13GO (turbo paralelo),Sincroniza LIVE + capítulos VOD;hash change detection,requests;mysql.connector;hashlib;concurrent.futures,API 13GO;playlists múltiples,13go_senales_live;13go_capitulos_vod,13GO;C13,Manual,13go_capitulos_vod,✓
+13GO_arbol_import.py,Sincronizador 13GO con reportes,Similar Arbol;genera reportes CSV y logs,requests;mysql.connector;hashlib;pandas;concurrent.futures,API 13GO;report_dir,13go_senales_live;13go_capitulos_vod;CSV,13GO;C13,Automática,13go_capitulos_vod,✓
+analisis_sentimiento.py,Analizador Sentimiento RRSS,Clasifica comentarios RobERTa+BERT+heurística chilena,mysql.connector;pysentimiento;transformers,comentarios_rrss_consolidado,comentarios_rrss_consolidado (sent_*),RRSS,Manual,comentarios_rrss_consolidado,✓
