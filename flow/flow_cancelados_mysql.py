@@ -22,6 +22,7 @@ COL_USER_ID   = 'user_id'
 COL_EMAIL     = 'email'
 COL_SUBMITTED = 'Submitted At'
 COL_TOKEN     = 'Token'
+COL_MOTIVO    = '¿Por qué finalizas tu suscripción?'
 
 TABLE = 'flow_cancelados'
 
@@ -115,39 +116,46 @@ def calc_dias(dt1, dt2):
 
 # ── MySQL ─────────────────────────────────────────────────────────────────────
 
-def get_connection():
-    return mysql.connector.connect(**DB_CONFIG)
+def get_connection(autocommit=False):
+    conn = mysql.connector.connect(**DB_CONFIG)
+    conn.autocommit = autocommit
+    return conn
 
 
 def create_table_if_not_exists(conn):
     sql = f"""
     CREATE TABLE IF NOT EXISTS {TABLE} (
-        id               INT AUTO_INCREMENT PRIMARY KEY,
-        user_id          VARCHAR(128) NOT NULL,
-        email            VARCHAR(255),
-        submitted_at     DATETIME,
-        token            VARCHAR(255),
-        plan             VARCHAR(50),
-        inicio_plan      DATETIME,
-        fin_plan         DATETIME,
-        subscription_end DATETIME,
-        dias_hasta_fin   INT,
-        mail_enviado     TINYINT DEFAULT 0 COMMENT '0=no enviado, 3=enviado a 3 dias, 14=enviado a 14 dias',
-        created_at       DATETIME DEFAULT CURRENT_TIMESTAMP,
+        id                  INT AUTO_INCREMENT PRIMARY KEY,
+        user_id             VARCHAR(128) NOT NULL,
+        email               VARCHAR(255),
+        submitted_at        DATETIME,
+        token               VARCHAR(255),
+        motivo_cancelacion  TEXT,
+        plan                VARCHAR(50),
+        inicio_plan         DATETIME,
+        fin_plan            DATETIME,
+        subscription_end    DATETIME,
+        dias_hasta_fin      INT,
+        mail_enviado        TINYINT DEFAULT 0 COMMENT '0=no enviado, 3=enviado a 3 dias, 14=enviado a 14 dias',
+        created_at          DATETIME DEFAULT CURRENT_TIMESTAMP,
         UNIQUE KEY uq_user_id (user_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     """
     with conn.cursor() as cur:
         cur.execute(sql)
-    conn.commit()
+        try:
+            cur.execute(f"ALTER TABLE {TABLE} ADD COLUMN motivo_cancelacion TEXT AFTER token")
+            print(f"Columna 'motivo_cancelacion' agregada a '{TABLE}'.")
+        except Exception:
+            pass  # Ya existe
     print(f"Tabla '{TABLE}' verificada/creada.")
 
 
 def insert_sheet_rows(conn, rows):
     """Paso 1: inserta filas del sheet. Ignora duplicados por user_id."""
     sql = f"""
-    INSERT IGNORE INTO {TABLE} (user_id, email, submitted_at, token)
-    VALUES (%s, %s, %s, %s)
+    INSERT IGNORE INTO {TABLE} (user_id, email, submitted_at, token, motivo_cancelacion)
+    VALUES (%s, %s, %s, %s, %s)
     """
     inserted = 0
     with conn.cursor() as cur:
@@ -156,13 +164,13 @@ def insert_sheet_rows(conn, rows):
             email     = row.get(COL_EMAIL, '').strip()
             submitted = row.get(COL_SUBMITTED, '').strip()
             token     = row.get(COL_TOKEN, '').strip()
+            motivo    = row.get(COL_MOTIVO, '').strip()
             if not user_id:
                 continue
             submitted_dt = parse_dt(submitted)
-            cur.execute(sql, (user_id, email or None, submitted_dt, token or None))
+            cur.execute(sql, (user_id, email or None, submitted_dt, token or None, motivo or None))
             if cur.rowcount:
                 inserted += 1
-    conn.commit()
     return inserted
 
 
@@ -202,39 +210,16 @@ def read_from_csv(filepath):
         return list(reader)
 
 
-def read_from_google_sheets(sheet_url, credentials_file):
-    """Lee filas directamente desde Google Sheets usando cuenta de servicio."""
-    try:
-        import gspread
-    except ImportError:
-        print("Error: instala gspread con  pip install gspread")
+def read_from_google_sheets(sheet_url):
+    """Lee filas desde una URL de Google Sheets publicada como CSV."""
+    import io
+    r = requests.get(sheet_url, timeout=30)
+    if r.status_code != 200:
+        print(f"Error al descargar sheet: HTTP {r.status_code}")
         sys.exit(1)
-
-    import re
-    match = re.search(r'/spreadsheets/d/([a-zA-Z0-9-_]+)', sheet_url)
-    if not match:
-        print("Error: URL de Google Sheets inválida.")
-        sys.exit(1)
-    sheet_id = match.group(1)
-
-    gid_match = re.search(r'gid=(\d+)', sheet_url)
-    gid = int(gid_match.group(1)) if gid_match else 0
-
-    gc         = gspread.service_account(filename=credentials_file)
-    spreadsheet = gc.open_by_key(sheet_id)
-
-    # Buscar la hoja por gid
-    worksheet = None
-    for ws in spreadsheet.worksheets():
-        if ws.id == gid:
-            worksheet = ws
-            break
-    if worksheet is None:
-        worksheet = spreadsheet.sheet1
-
-    print(f"Leyendo hoja: '{worksheet.title}'")
-    records = worksheet.get_all_records()
-    return records
+    r.encoding = 'utf-8-sig'
+    reader = csv.DictReader(io.StringIO(r.text))
+    return list(reader)
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
@@ -247,13 +232,8 @@ if __name__ == "__main__":
     )
     # Fuente de datos (una de las dos)
     source = parser.add_mutually_exclusive_group(required=True)
-    source.add_argument('--file',       help='CSV descargado del Google Sheet')
-    source.add_argument('--sheet-url',  help='URL del Google Sheet (requiere --credentials)')
-    parser.add_argument(
-        '--credentials',
-        default='credentials.json',
-        help='Archivo JSON de cuenta de servicio Google (default: credentials.json)'
-    )
+    source.add_argument('--file',      help='CSV descargado del Google Sheet')
+    source.add_argument('--sheet-url', help='URL publicada de Google Sheets (formato pub?output=csv)')
     args = parser.parse_args()
 
     # Leer datos según la fuente elegida
@@ -266,11 +246,11 @@ if __name__ == "__main__":
             sys.exit(1)
     else:
         print(f"Fuente: Google Sheets — {args.sheet_url}")
-        sheet_rows = read_from_google_sheets(args.sheet_url, args.credentials)
+        sheet_rows = read_from_google_sheets(args.sheet_url)
 
     print(f"Filas en el sheet: {len(sheet_rows)}")
 
-    conn = get_connection()
+    conn = get_connection(autocommit=True)
 
     # PASO 1 — Crear tabla y cargar sheet (solo nuevos)
     create_table_if_not_exists(conn)
