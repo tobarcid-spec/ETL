@@ -26,22 +26,86 @@ PLANES = {
 def traducir_plan(plan_id):
     return PLANES.get(plan_id, plan_id or 'N/A')
 
-MENSAJES = {
-    14: """<p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">
-                Tu suscripción a <strong style="color:#ea580c;">13go</strong> vence en
-                <strong>14 días</strong>. Queremos avisarte con anticipación para que
-                puedas decidir si deseas renovarla y seguir disfrutando de todo el contenido.
-              </p>""",
-    3:  """<p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">
-                Tu suscripción a <strong style="color:#ea580c;">13go</strong> vence en
-                <strong style="color:#ea580c;">solo 3 días</strong>. ¡Es tu última oportunidad
-                para renovarla y no perder el acceso a tu contenido favorito!
-              </p>""",
-}
+MENSAJE_INTRO = """<p style="margin:0 0 8px;font-size:15px;color:#374151;line-height:1.6;">
+                Hola, nos dimos cuenta de que tu suscripción a <strong style="color:#ea580c;">13go</strong>
+                termina en <strong style="color:#ea580c;">{{DIAS_RESTANTES}} días</strong>.
+              </p>
+              <p style="margin:0 0 8px;font-size:15px;color:#374151;line-height:1.6;">
+                Disfrutamos mucho tenerte con nosotros y, porque valoramos tu lealtad,
+                te preparamos una propuesta única y exclusiva.
+              </p>"""
+
+OFERTA_MENSUAL = """
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#fef3c7;border:2px solid #f59e0b;border-radius:8px;margin-bottom:28px;">
+  <tr>
+    <td style="padding:24px;">
+      <p style="margin:0 0 12px;font-size:13px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.5px;">🎁 Oferta exclusiva para ti</p>
+      <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">
+        Queremos que sigas siendo parte de <strong style="color:#ea580c;">13go</strong>.
+        Por eso tenemos estas dos opciones para que te quedes con nosotros:
+      </p>
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="padding:10px 14px;background:#ffffff;border-radius:6px;margin-bottom:8px;border-left:4px solid #ea580c;">
+            <p style="margin:0;font-size:14px;color:#374151;line-height:1.5;">
+              <strong style="color:#111827;">2 meses de 13go</strong> por solo
+              <strong style="color:#ea580c;font-size:16px;">$990</strong> cada uno
+              <span style="font-size:12px;color:#6b7280;"> · precio normal $2.990</span>
+            </p>
+          </td>
+        </tr>
+        <tr><td style="height:8px;"></td></tr>
+        <tr>
+          <td style="padding:10px 14px;background:#ffffff;border-radius:6px;border-left:4px solid #ea580c;">
+            <p style="margin:0;font-size:14px;color:#374151;line-height:1.5;">
+              <strong style="color:#111827;">Plan anual</strong> a
+              <strong style="color:#ea580c;font-size:16px;">$24.990</strong>
+              <span style="font-size:12px;color:#6b7280;"> · precio normal $29.990</span>
+            </p>
+          </td>
+        </tr>
+      </table>
+      <p style="margin:20px 0 0;font-size:14px;color:#374151;line-height:1.6;">
+        Para activar cualquiera de estas ofertas, solo <strong>responde este correo</strong>
+        indicando cuál prefieres y te ayudaremos de inmediato.
+      </p>
+    </td>
+  </tr>
+</table>
+"""
+
+OFERTA_ANUAL = """
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#fef3c7;border:2px solid #f59e0b;border-radius:8px;margin-bottom:28px;">
+  <tr>
+    <td style="padding:24px;">
+      <p style="margin:0 0 12px;font-size:13px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.5px;">🎁 Oferta exclusiva para ti</p>
+      <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">
+        Queremos que sigas siendo parte de <strong style="color:#ea580c;">13go</strong>.
+        Renueva tu <strong style="color:#111827;">Plan Anual</strong> con un precio especial:
+      </p>
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="padding:10px 14px;background:#ffffff;border-radius:6px;border-left:4px solid #ea580c;">
+            <p style="margin:0;font-size:14px;color:#374151;line-height:1.5;">
+              <strong style="color:#111827;">Plan Anual</strong> a
+              <strong style="color:#ea580c;font-size:16px;">$24.990</strong>
+              <span style="font-size:12px;color:#6b7280;"> · precio normal $29.990</span>
+            </p>
+          </td>
+        </tr>
+      </table>
+      <p style="margin:20px 0 0;font-size:14px;color:#374151;line-height:1.6;">
+        Para activar esta oferta, solo <strong>responde este correo</strong>
+        y te ayudamos de inmediato.
+      </p>
+    </td>
+  </tr>
+</table>
+"""
 
 ASUNTOS = {
     14: 'Tu suscripción 13go vence en 14 días',
-    3:  '⚠️ Tu suscripción 13go vence en 3 días',
+    3:  'Tu suscripción 13go vence en 3 días',
 }
 
 
@@ -97,13 +161,18 @@ def build_email(row, dias):
             return val.strftime('%d/%m/%Y')
         return str(val)[:10]
 
-    dias_restantes = row.get('dias_hasta_fin') or dias
+    dias_restantes = dias
+    plan_id        = row.get('plan') or ''
+    plan_tipo      = traducir_plan(plan_id)
+    oferta         = OFERTA_ANUAL if plan_tipo == 'Anual' else OFERTA_MENSUAL
 
-    html = html.replace('{{MENSAJE_INTRO}}', MENSAJES[dias])
-    html = html.replace('{{PLAN}}',          traducir_plan(row.get('plan')))
+    intro = MENSAJE_INTRO.replace('{{DIAS_RESTANTES}}', str(dias_restantes))
+
+    html = html.replace('{{MENSAJE_INTRO}}', intro)
+    html = html.replace('{{OFERTA_BLOQUE}}', oferta)
+    html = html.replace('{{PLAN}}',          plan_tipo)
     html = html.replace('{{INICIO_PLAN}}',   fmt_fecha(row.get('inicio_plan')))
     html = html.replace('{{FIN_PLAN}}',      fmt_fecha(row.get('fin_plan')))
-    html = html.replace('{{DIAS_RESTANTES}}', str(dias_restantes))
     return html
 
 
