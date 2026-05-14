@@ -104,8 +104,9 @@
                     <p class="text-2xl font-black italic text-gray-900">16.069.984</p>
                 </div>
                 <div class="border-l-4 border-black pl-4 py-3 bg-gray-50">
-                    <p class="text-[10px] font-bold text-gray-500 uppercase">Alcance Total</p>
-                    <p class="text-2xl font-black italic text-gray-900">13.400.000</p>
+                    <p class="text-[10px] font-bold text-gray-500 uppercase">Cap. Destacado</p>
+                    <p class="text-2xl font-black italic text-gray-900">CAP 02</p>
+                    <p class="text-[9px] text-orange-600 font-bold">5.913.168 vistas</p>
                 </div>
                 <div class="border-l-4 border-orange-600 pl-4 py-3 bg-gray-50">
                     <p class="text-[10px] font-bold text-gray-500 uppercase">Plataforma Top</p>
@@ -130,7 +131,7 @@
                 <div class="bg-gray-900 text-white p-6 rounded-xl relative overflow-hidden h-full">
                     <h4 class="text-orange-500 text-[10px] font-black italic mb-2 tracking-widest">ESTADO DE SITUACIÓN V8</h4>
                     <p class="text-[11px] italic leading-relaxed font-light">
-                        El contenido ha alcanzado 16.1 millones de visualizaciones y 13.4 millones de usuarios únicos (ratio 1.20x), evidenciando una expansión sólida del engagement. TikTok domina con 69.4% del tráfico (~11.2M vistas), mientras Facebook (17.9%) e Instagram (12.3%) siguen aportando audiencias valiosas.
+                        El contenido ha alcanzado 16.1 millones de visualizaciones, evidenciando una expansión sólida del engagement con un crecimiento de +2.5% respecto al reporte anterior. TikTok domina con 69.4% del tráfico (~11.2M vistas), mientras Facebook (17.9%) e Instagram (12.3%) siguen aportando audiencias valiosas. El Capítulo 02 lidera con 5.9 millones de vistas.
                     </p>
                 </div>
                 
@@ -143,7 +144,7 @@
             </div>
 
             <div class="absolute bottom-8 left-15 right-15 flex justify-between text-[8px] font-bold text-gray-300 uppercase tracking-[0.4em]">
-                <span>Página 01 / 03</span>
+                <span>Página 01 / 02</span>
             </div>
         </div>
 
@@ -168,50 +169,10 @@
                 <tbody id="vistas-body"></tbody>
             </table>
             <div class="absolute bottom-8 left-15 right-15 flex justify-between text-[8px] font-bold text-gray-300 uppercase tracking-[0.4em]">
-                <span>Página 02 / 03</span>
+                <span>Página 02 / 02</span>
             </div>
         </div>
 
-        <!-- PÁGINA 3: ALCANCE Y CONCLUSIONES -->
-        <div class="page header-accent">
-            <div class="flex items-center gap-2 mb-6">
-                <div class="w-1.5 h-6 bg-orange-600"></div>
-                <h2 class="text-lg font-black italic uppercase tracking-tighter text-gray-800">Alcance Estimado (Usuarios Únicos)</h2>
-            </div>
-            
-            <table class="stats-table">
-                <thead>
-                    <tr>
-                        <th>Capítulos</th>
-                        <th>13go</th>
-                        <th>Facebook</th>
-                        <th>Instagram</th>
-                        <th>TikTok</th>
-                        <th>YouTube</th>
-                        <th class="bg-black">TOTAL ALCANCE</th>
-                    </tr>
-                </thead>
-                <tbody id="alcance-body"></tbody>
-            </table>
-
-            <div class="mt-12 p-6 border-l-4 border-black bg-gray-50">
-                <h3 class="text-xs font-black uppercase mb-2">Resumen de Métricas Consolidadas</h3>
-                <div class="grid grid-cols-2 gap-4 text-[10px]">
-                    <div class="space-y-2">
-                        <p><strong>Total Visualizaciones:</strong> 16.069.984</p>
-                        <p><strong>Total Alcance Estimado:</strong> 13.400.000</p>
-                        <p><strong>Ratio Vistas/Alcance:</strong> 1.20</p>
-                    </div>
-                    <div class="space-y-2">
-                        <p><strong>Dominancia TikTok:</strong> 69.4% del total</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="absolute bottom-8 left-15 right-15 flex justify-between text-[8px] font-bold text-gray-300 uppercase tracking-[0.4em]">
-                <span>Página 03 / 03</span>
-            </div>
-        </div>
     </div>
 
     <script>
@@ -245,62 +206,20 @@
             { c: "CAPÍTULO 26", go: 230,  fb: 49559,  ig: 164466, tk: 72900,   yt: 737  }
         ];
 
-        // Alcance ajustado según la imagen
-        const rData = [
-            { c: "CAPÍTULO 01", go: 530,  fb: 15476,  ig: 36729,  tk: 1115400, yt: 1791 },
-            { c: "CAPÍTULO 02", go: 242,  fb: 45694,  ig: 38708,  tk: 4976400, yt: 1692 },
-            { c: "CAPÍTULO 03", go: 268,  fb: 243454, ig: 347764, tk: 487258,  yt: 1792 },
-            { c: "CAPÍTULO 04", go: 227,  fb: 29797,  ig: 24053,  tk: 21364,   yt: 642  },
-            { c: "CAPÍTULO 05", go: 208,  fb: 44824,  ig: 190528, tk: 1029600, yt: 665  },
-            { c: "CAPÍTULO 06", go: 175,  fb: 227147, ig: 50456,  tk: 91634,   yt: 844  },
-            { c: "CAPÍTULO 07", go: 209,  fb: 2528,   ig: 14822,  tk: 26941,   yt: 661  },
-            { c: "CAPÍTULO 08", go: 219,  fb: 640184, ig: 60019,  tk: 75847,   yt: 1128 },
-            { c: "CAPÍTULO 09", go: 193,  fb: 23959,  ig: 17049,  tk: 23938,   yt: 663  },
-            { c: "CAPÍTULO 10", go: 174,  fb: 20882,  ig: 27025,  tk: 35435,   yt: 660  },
-            { c: "CAPÍTULO 11", go: 139,  fb: 19555,  ig: 23247,  tk: 27284,   yt: 800  },
-            { c: "CAPÍTULO 12", go: 114,  fb: 39932,  ig: 14092,  tk: 16130,   yt: 787  },
-            { c: "CAPÍTULO 13", go: 144,  fb: 107229, ig: 35255,  tk: 48391,   yt: 834  },
-            { c: "CAPÍTULO 14", go: 147,  fb: 32258,  ig: 22656,  tk: 30631,   yt: 826  },
-            { c: "CAPÍTULO 15", go: 176,  fb: 145426, ig: 28118,  tk: 42643,   yt: 529  },
-            { c: "CAPÍTULO 16", go: 155,  fb: 32230,  ig: 22066,  tk: 1115400, yt: 1072 },
-            { c: "CAPÍTULO 17", go: 182,  fb: 28421,  ig: 58684,  tk: 42214,   yt: 909  },
-            { c: "CAPÍTULO 18", go: 137,  fb: 72858,  ig: 15765,  tk: 25740,   yt: 873  },
-            { c: "CAPÍTULO 19", go: 172,  fb: 54094,  ig: 52372,  tk: 30373,   yt: 912  },
-            { c: "CAPÍTULO 20", go: 139,  fb: 131079, ig: 31827,  tk: 54912,   yt: 947  },
-            { c: "CAPÍTULO 21", go: 164,  fb: 113760, ig: 19208,  tk: 27370,   yt: 617  },
-            { c: "CAPÍTULO 22", go: 104,  fb: 94746,  ig: 72302,  tk: 78764,   yt: 1853 },
-            { c: "CAPÍTULO 23", go: 131,  fb: 50102,  ig: 31499,  tk: 34492,   yt: 812  },
-            { c: "CAPÍTULO 24", go: 120,  fb: 53790,  ig: 25779,  tk: 25311,   yt: 845  },
-            { c: "CAPÍTULO 25", go: 129,  fb: 76463,  ig: 33945,  tk: 23423,   yt: 1289 },
-            { c: "CAPÍTULO 26", go: 228,  fb: 41084,  ig: 117100, tk: 62548,   yt: 363  }
-        ];
-
         const fmt = (n) => n.toLocaleString('es-CL');
 
         function render() {
             const vBody = document.getElementById('vistas-body');
-            const rBody = document.getElementById('alcance-body');
-            
             let vt = { go:0, fb:0, ig:0, tk:0, yt:0, tot:0 };
-            let rt = { go:0, fb:0, ig:0, tk:0, yt:0, tot:0 };
 
-            vData.forEach((d, i) => {
+            vData.forEach(d => {
                 const rowTot = d.go + d.fb + d.ig + d.tk + d.yt;
                 vt.go+=d.go; vt.fb+=d.fb; vt.ig+=d.ig; vt.tk+=d.tk; vt.yt+=d.yt; vt.tot+=rowTot;
                 vBody.innerHTML += `<tr><td>${d.c}</td><td>${fmt(d.go)}</td><td>${fmt(d.fb)}</td><td>${fmt(d.ig)}</td><td>${fmt(d.tk)}</td><td>${fmt(d.yt)}</td><td class="font-bold">${fmt(rowTot)}</td></tr>`;
-                
-                const rd = rData[i];
-                const rRowTot = rd.go + rd.fb + rd.ig + rd.tk + rd.yt;
-                rt.go+=rd.go; rt.fb+=rd.fb; rt.ig+=rd.ig; rt.tk+=rd.tk; rt.yt+=rd.yt; rt.tot+=rRowTot;
-                rBody.innerHTML += `<tr><td>${rd.c}</td><td>${fmt(rd.go)}</td><td>${fmt(rd.fb)}</td><td>${fmt(rd.ig)}</td><td>${fmt(rd.tk)}</td><td>${fmt(rd.yt)}</td><td class="font-bold">${fmt(rRowTot)}</td></tr>`;
             });
 
-            // Totales auditados para reporte V8
             vt.tot = 16069984;
-            rt.tot = 13400000;
-
             vBody.innerHTML += `<tr class="total-row"><td>TOTAL VISTAS</td><td>${fmt(vt.go)}</td><td>${fmt(vt.fb)}</td><td>${fmt(vt.ig)}</td><td>${fmt(vt.tk)}</td><td>${fmt(vt.yt)}</td><td style="background:#ea580c">${fmt(vt.tot)}</td></tr>`;
-            rBody.innerHTML += `<tr class="total-row"><td>TOTAL ALCANCE</td><td>${fmt(rt.go)}</td><td>${fmt(rt.fb)}</td><td>${fmt(rt.ig)}</td><td>${fmt(rt.tk)}</td><td>${fmt(rt.yt)}</td><td style="background:#ea580c">${fmt(rt.tot)}</td></tr>`;
 
             initCharts(vt);
         }
