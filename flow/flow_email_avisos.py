@@ -106,6 +106,7 @@ OFERTA_ANUAL = """
 ASUNTOS = {
     14: 'Tu suscripción 13go vence en 14 días',
     3:  'Tu suscripción 13go vence en 3 días',
+    30: 'Tu suscripción anual 13go vence pronto',
 }
 
 
@@ -114,26 +115,38 @@ def get_connection():
 
 
 def get_pendientes(conn, dias):
-    """Registros cuyo subscription_end es exactamente hoy + {dias} días.
-    - 14 días: solo mail_enviado = 0 (primer contacto)
-    - 3 días:  mail_enviado IN (0, 14) — reciben ambos correos
+    """Registros a notificar según la ventana de días.
+    - 14 días: subscription_end exactamente hoy+14, mail_enviado = 0
+    - 3 días:  subscription_end exactamente hoy+3,  mail_enviado IN (0, 14)
+    - 30 días: solo anuales (A002/B002), subscription_end entre hoy y hoy+30, mail_enviado = 0
     """
-    fecha_exacta = datetime.now().date() + timedelta(days=dias)
+    hoy = datetime.now().date()
 
-    if dias == 14:
-        filtro_enviado = "mail_enviado = 0"
-        valores = (fecha_exacta,)
-    else:  # dias == 3
-        filtro_enviado = "mail_enviado IN (0, 14)"
+    if dias == 30:
+        sql = """
+            SELECT user_id, email, plan, inicio_plan, fin_plan, subscription_end, dias_hasta_fin
+            FROM flow_cancelados
+            WHERE mail_enviado = 0
+              AND subscription_end IS NOT NULL
+              AND plan IN ('s-13go-A002', 's-13go-B002')
+              AND DATE(subscription_end) BETWEEN %s AND %s
+        """
+        valores = (hoy, hoy + timedelta(days=30))
+    else:
+        fecha_exacta = hoy + timedelta(days=dias)
+        if dias == 14:
+            filtro_enviado = "mail_enviado IN (0, 30)"
+        else:  # dias == 3
+            filtro_enviado = "mail_enviado IN (0, 14, 30)"
+        sql = f"""
+            SELECT user_id, email, plan, inicio_plan, fin_plan, subscription_end, dias_hasta_fin
+            FROM flow_cancelados
+            WHERE {filtro_enviado}
+              AND subscription_end IS NOT NULL
+              AND DATE(subscription_end) = %s
+        """
         valores = (fecha_exacta,)
 
-    sql = f"""
-        SELECT user_id, email, plan, inicio_plan, fin_plan, subscription_end, dias_hasta_fin
-        FROM flow_cancelados
-        WHERE {filtro_enviado}
-          AND subscription_end IS NOT NULL
-          AND DATE(subscription_end) = %s
-    """
     with conn.cursor(dictionary=True) as cur:
         cur.execute(sql, valores)
         return cur.fetchall()
@@ -195,8 +208,8 @@ if __name__ == '__main__':
         description='Envía avisos de vencimiento de suscripción por Gmail.'
     )
     parser.add_argument(
-        '--dias', type=int, choices=[3, 14], required=True,
-        help='Días de anticipación: 3 o 14'
+        '--dias', type=int, choices=[3, 14, 30], required=True,
+        help='Días de anticipación: 3, 14 o 30 (30 = anuales en ventana de 30 días)'
     )
     parser.add_argument(
         '--test', action='store_true',
@@ -219,14 +232,25 @@ if __name__ == '__main__':
     enviados = []
     errores  = 0
 
+    def dias_para_row(row):
+        """Para --dias 30 usa días reales; para 3/14 usa el parámetro fijo."""
+        if args.dias != 30:
+            return args.dias
+        sub_end = row.get('subscription_end')
+        if isinstance(sub_end, datetime):
+            sub_end = sub_end.date()
+        elif isinstance(sub_end, str):
+            sub_end = datetime.strptime(sub_end[:10], '%Y-%m-%d').date()
+        return (sub_end - datetime.now().date()).days if sub_end else args.dias
+
     if args.test:
-        # Prueba: envía el primer registro a tobarcid@gmail.com
-        row = pendientes[0]
-        html = build_email(row, args.dias)
+        row  = pendientes[0]
+        dias = dias_para_row(row)
+        html = build_email(row, dias)
         print(f"[PRUEBA] Enviando correo de ejemplo a {TEST_EMAIL}...")
         print(f"  user_id: {row['user_id']}")
         print(f"  plan:    {row.get('plan')}")
-        print(f"  sub_end: {row.get('subscription_end')}")
+        print(f"  sub_end: {row.get('subscription_end')} ({dias} días reales)")
         try:
             send_email(TEST_EMAIL, f"[PRUEBA] {subject}", html)
             print(f"  -> Enviado a {TEST_EMAIL}")
@@ -235,15 +259,16 @@ if __name__ == '__main__':
         print("\nModo prueba: mail_enviado NO actualizado.")
     else:
         for row in pendientes:
-            to = row.get('email')
+            to   = row.get('email')
+            dias = dias_para_row(row)
             if not to:
                 print(f"  Sin email: {row['user_id']} — omitido")
                 continue
-            html = build_email(row, args.dias)
+            html = build_email(row, dias)
             try:
                 send_email(to, subject, html)
                 enviados.append(row['user_id'])
-                print(f"  OK  {to}")
+                print(f"  OK  {to}  ({dias} días)")
             except Exception as e:
                 print(f"  ERR {to}: {e}")
                 errores += 1
